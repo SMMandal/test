@@ -1,0 +1,36 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'java'
+}
+
+group 'tcup'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework:spring-web'
+    implementation 'io.projectreactor:reactor-core'
+    implementation 'com.google.guava:guava'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation project(':dls-core')
+    implementation 'org.projectlombok:lombok'
+    implementation group: 'com.azure', name: 'azure-sdk-bom', version: '1.2.8', ext: 'pom'
+    implementation group: 'com.azure', name: 'azure-storage-blob', version: '12.20.1'
+    implementation group: 'com.azure', name: 'azure-identity', version: '1.7.2'
+    annotationProcessor 'org.projectlombok:lombok'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.named('bootBuildImage') {
+    it.enabled(false)
+}
+tasks.named('bootJar') {
+    it.enabled(false)
+}

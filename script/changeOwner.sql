@@ -1,0 +1,10 @@
+alter table file owner to dlsusr;
+alter table file_meta owner to dlsusr;
+alter table file_share owner to dlsusr;
+alter sequence hibernate_sequence owner to dlsusr;
+alter table link owner to dlsusr;
+alter view statistics owner to dlsusr;
+alter table tenant owner to dlsusr;
+alter view text_search_result owner to dlsusr;
+alter view text_search_result_shared owner to dlsusr;
+alter table users owner to dlsusr;

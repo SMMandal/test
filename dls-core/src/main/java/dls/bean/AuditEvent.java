@@ -1,0 +1,8 @@
+package dls.bean;
+
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
+
+public enum AuditEvent {
+    CREATED, READ, DELETED, UPDATED, METADATA_UPDATED, METADATA_ADDED, PERMISSION_READ, PERMISSION_UPDATED, METADATA_DELETED, PERMISSION_DELETED,
+    CREATION_FAILED, DELETION_FAILED, UPDATE_FAILED;
+}
