@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id "application"
+//    id 'org.graalvm.buildtools.native' version '0.9.19'
+}
+
+group 'com.tcupiot'
+version '1.0'
+
+repositories {
+    mavenCentral()
+//    maven { url = uri("https://repo.spring.io/milestone") }
+}
+
+dependencies {
+//    implementation("io.rsocket:rsocket-core:1.1.2")
+    implementation("io.rsocket:rsocket-transport-netty:1.1.4")
+//            {
+//        exclude group: 'io.netty', module: 'netty-codec-http2'
+//    }
+    implementation ("commons-cli:commons-cli:1.5.0")
+    implementation ("org.slf4j:slf4j-simple:2.0.7")
+}
+
+
+test {
+    useJUnitPlatform()
+}
+ext {
+    javaMainClass = "com.tcupiot.Main"
+}
+
+application {
+    mainClassName = javaMainClass
+}
+
+jar {
+    archivesBaseName = "rftc"
+    manifest {
+        attributes "Main-Class": "com.tcupiot.Main"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

@@ -1,0 +1,166 @@
+#Secret Creation
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rft
+data:
+  rftusr: YWRtaW4=
+type: Opaque
+---
+
+##Deployment Creation
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "17"
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
+  creationTimestamp: "2022-05-26T09:35:33Z"
+  generation: 39
+  name: rftserver
+  namespace: tcup
+  resourceVersion: "46006895"
+  selfLink: /apis/apps/v1/namespaces/tcup/deployments/rftserver
+  uid: 0713fe9c-4ae6-47ec-963c-c85b7b046170
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: rftserver
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: rftserver
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: LOG_LEVEL
+          value: ERROR
+        - name: LOGFILE_LOCATION
+          value: ./logs/rft.log
+        - name: LOGFILE_SIZE
+          value: 10MB
+        - name: LOGFILE_HISTORY
+          value: "7"
+        - name: NFS_DIR
+          value: /workspace/data
+        - name: PORT
+          value: "6666"
+        - name: DLS_ADMIN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: rft
+              key: rftusr
+        - name: PROTOCOL
+          value: websocket
+        - name: DLS_URL
+          value: http://dlshost:8080/dls
+        - name: APPLICATION_PROPERTIES
+          valueFrom:
+            configMapKeyRef:
+              key: application.properties
+              name: rfts-config
+        image: rft-server:1.0
+        imagePullPolicy: Never
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 200
+          periodSeconds: 100
+          successThreshold: 1
+          tcpSocket:
+            port: 6666
+          timeoutSeconds: 1
+        name: rftserver
+        ports:
+        - containerPort: 6666
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 200
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            port: 6666
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: "4"
+            memory: 8Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1002
+        startupProbe:
+          failureThreshold: 30
+          initialDelaySeconds: 200
+          periodSeconds: 100
+          successThreshold: 1
+          tcpSocket:
+            port: 6666
+          timeoutSeconds: 1
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/secrets/rftusr
+          name: secretrft
+          subPath: rftusr
+        - mountPath: /workspace/data
+          name: data
+          subPath: data
+        - mountPath: /workspace/logs
+          name: logs
+          subPath: logs
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: secretrft
+        secret:
+          defaultMode: 256
+          secretName: rft
+      - hostPath:
+          path: /home/sg/Documents/dls-fail-file/dls
+          type: DirectoryOrCreate
+        name: data
+      - hostPath:
+          path: /home/sg/Documents/dls-fail-file/dls
+          type: DirectoryOrCreate
+        name: logs        
+---
+
+## Service Creation
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: rftserver
+  name: rftserver
+spec:
+  type: NodePort
+  ports:
+  - name: "6666"
+    port: 6666
+    protocol: TCP
+    targetPort: 6666
+  selector:
+    app: rftserver
